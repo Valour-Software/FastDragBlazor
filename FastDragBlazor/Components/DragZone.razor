@@ -1,0 +1,48 @@
+﻿@* The DragZone contains the Draggable elements *@
+
+<div class="@Class">
+    <CascadingValue Value="this" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+</div>
+
+@code {
+    
+    [CascadingParameter]
+    public DragWrapper Wrapper { get; set; }
+    
+    /// <summary>
+    /// The content of this wrapper. Should contain Draggables.
+    /// </summary>
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    
+    /// <summary>
+    /// For the animation to work, the item's height must be known
+    /// </summary>
+    [Parameter]
+    public int Height { get; set; }
+    
+    /// <summary>
+    /// Allows you to style the DragZone.
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; }
+    
+    /// <summary>
+    /// The items within this DragZone.
+    /// </summary>
+    public List<DragItem> Items { get; set; } = new();
+
+
+    protected override void OnInitialized()
+    {
+        if (Wrapper is null)
+            return;
+    }
+    
+    public void RegisterItem(DragItem item)
+    {
+        Items.Add(item);
+    }
+}

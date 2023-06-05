@@ -1,0 +1,26 @@
+﻿@* The DragWrapper is used to wrap an entire draggable chain. DragZones within a wrapper have items shared. *@
+<div class="@Class">
+    <CascadingValue Value="this" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// The content of this wrapper. Should contain DragZones.
+    /// </summary>
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    
+    /// <summary>
+    /// Allows you to style the DragWrapper.
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; }
+    
+    public List<DragZone> Zones { get; set; } = new();
+    
+      
+}

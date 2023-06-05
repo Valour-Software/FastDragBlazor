@@ -1,0 +1,41 @@
+﻿<div class="@Class">
+    @ChildContent
+</div>
+
+@code {
+    
+    [CascadingParameter]
+    public DragWrapper Wrapper { get; set; }
+    
+    [CascadingParameter]
+    public DragZone Zone { get; set; }
+    
+    /// <summary>
+    /// For the animation to work, the item's height must be known
+    /// </summary>
+    [Parameter]
+    public int Height { get; set; }
+    
+    /// <summary>
+    /// The content of this drag item.
+    /// </summary>
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    
+    /// <summary>
+    /// Allows you to style the DragWrapper.
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Needs wrapper and zone to function
+        if (Wrapper is null || Zone is null)
+            return;
+
+        
+    }
+
+}
+
