@@ -1,0 +1,12 @@
+.__drag-item {
+    position: absolute;
+    transition: top 0.2s ease-in-out;
+    top: 0;
+}
+
+.__drag-right-handle {
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    right: 0;
+}

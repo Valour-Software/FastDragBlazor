@@ -96,6 +96,38 @@ a, .btn-link {
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
 }
 
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}
+
+.drag-zone {
+    background-color: lightblue;
+}
+
+.drag-item:nth-child(1) {
+    background-color: lightgreen;
+}
+
+.drag-item:nth-child(2) {
+    background-color: lightpink;
+}
+
+.drag-item:nth-child(3) {
+    background-color: lightyellow;
+}
+
+.drag-item:nth-child(4) {
+    background-color: lightseagreen;
+}
+
+.drag-item:nth-child(5) {
+    background-color: lightcoral;
+}
+
+.drag-item:nth-child(6) {
+    background-color: lightyellow;
+}
+
+.drag-item:nth-child(7) {
+    background-color: lightgrey;
+}

@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@using FastDragBlazor.Components
+@page "/"
 
 <PageTitle>Index</PageTitle>
 
@@ -7,3 +8,29 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?"/>
+
+<br/>
+
+<DragWrapper>
+    <DragItem Class="drag-item" Height="40" DebugName="Banana Box" IsContainer="true">
+        <p>Category</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Banana Box" IsContainer="true">
+        <p>Category 2</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Pineapple">
+        <p>Channel 1</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Blueberry">
+        <p>Channel 2</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Cherry">
+        <p>Channel 3</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Egg">
+        <p>Channel 4</p>
+    </DragItem>
+    <DragItem Class="drag-item" Height="40" DebugName="Grape">
+        <p>Channel 5</p>
+    </DragItem>
+</DragWrapper>

@@ -1,4 +1,24 @@
-﻿<div class="@Class">
+﻿<div
+    class="__drag-item @Class"
+    style="top: @(Position)px; margin-left:  @(Depth * Wrapper.TabSize)px"
+    draggable="true"
+    ondragover="event.preventDefault();"
+    @ondragstart="OnDragStart"
+    @ondragend="OnDragEnd"
+    @ondrop="OnDrop"
+    @ondragenter="OnDragEnter">
+    @if (IsContainer)
+    {
+        /* Used for inserting instead of reordering */
+        <div
+            class="__drag-right-handle"
+            ondragover="event.preventDefault();"
+            @ondrop:stopPropagation="true"
+            @ondrop="OnDropRight"
+            @ondragenter:stopPropagation="true"
+            @ondragenter="OnDragEnterRight">
+        </div>
+    }
     @ChildContent
 </div>
 
@@ -6,15 +26,29 @@
     
     [CascadingParameter]
     public DragWrapper Wrapper { get; set; }
-    
-    [CascadingParameter]
-    public DragZone Zone { get; set; }
-    
+
     /// <summary>
     /// For the animation to work, the item's height must be known
     /// </summary>
     [Parameter]
     public int Height { get; set; }
+    
+    [Parameter]
+    public int StartDepth { get; set; }
+    
+    /// <summary>
+    /// True if this can contain other items
+    /// </summary
+    [Parameter]
+    public bool IsContainer { get; set; }
+    
+    [Parameter]
+    public string DebugName { get; set; }
+
+    /// <summary>
+    /// Used to build sections out
+    /// </summary>
+    public int Depth { get; set; } = 0;
     
     /// <summary>
     /// The content of this drag item.
@@ -28,14 +62,58 @@
     [Parameter]
     public string Class { get; set; }
 
+    /// <summary>
+    /// The actual position of this item
+    /// </summary>
+    public int Position { get; set; }
+
     protected override void OnInitialized()
     {
         // Needs wrapper and zone to function
-        if (Wrapper is null || Zone is null)
+        if (Wrapper is null)
             return;
 
+        Depth = StartDepth;
         
+        Wrapper.RegisterItem(this);
     }
 
+    public void SetPosition(int newPosition)
+    {
+        Position = newPosition;
+        StateHasChanged();
+    }
+    
+    private void OnDragStart()
+    {
+        Wrapper.NotifyDragging(this);
+        // Console.WriteLine("Now dragging " + GetHashCode());
+    }
+
+    private void OnDragEnd()
+    {
+        Wrapper.NotifyStopDragging();
+        // Console.WriteLine("Now not dragging " + GetHashCode());
+    }
+
+    private void OnDrop()
+    {
+        Wrapper.NotifyDropOn(this);
+    }
+    
+    private void OnDragEnter()
+    {
+        Wrapper.NotifyDragEnter(this);
+    }
+    
+    private void OnDropRight()
+    {
+        Wrapper.NotifyDropOn(this, true);
+    }
+    
+    private void OnDragEnterRight()
+    {
+        Wrapper.NotifyDragEnter(this, true);
+    }
 }
 

@@ -16,4 +16,8 @@
       <_ContentIncludedByDefault Remove="Components\DragZone.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\FastDragBlazor\FastDragBlazor.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -1,5 +1,11 @@
-﻿@* The DragWrapper is used to wrap an entire draggable chain. DragZones within a wrapper have items shared. *@
-<div class="@Class">
+﻿@using System.Text.Json
+
+<p>@JsonSerializer.Serialize(Items.Select(x => x.DebugName))</p>
+<p>Dragging: @_currentDrag?.DebugName</p>
+<p>Last Over: @_lastOver?.DebugName</p>
+
+@* The DragWrapper is used to wrap an entire draggable chain. DragZones within a wrapper have items shared. *@
+<div class="@Class __drag-wrapper" style="height: @Height">
     <CascadingValue Value="this" IsFixed="true">
         @ChildContent
     </CascadingValue>
@@ -19,8 +25,213 @@
     /// </summary>
     [Parameter]
     public string Class { get; set; }
+
+    [Parameter]
+    public int TabSize { get; set; } = 20;
     
-    public List<DragZone> Zones { get; set; } = new();
+    /// <summary>
+    /// Used to give wrapper proper height
+    /// </summary>
+    public int Height { get; set; }
+
+    /// <summary>
+    /// The item currently being dragged
+    /// </summary>
+    private DragItem _currentDrag;
+
+    /// <summary>
+    /// Last item hovered over
+    /// </summary>
+    private DragItem _lastOver;
+
+    /// <summary>
+    /// If the last hover was on the right
+    /// </summary>
+    private bool _lastRight;
     
-      
+    /// <summary>
+    /// The items within this DragWrapper.
+    /// </summary>
+    public List<DragItem> Items { get; set; } = new();
+
+    private DateTime lastEnter;
+    
+    public void RegisterItem(DragItem item)
+    {
+        // Add to list
+        Items.Add(item);
+        
+        // Set position
+        item.Position = Height;
+        
+        // Add to total height
+        Height += item.Height;
+        
+        StateHasChanged();
+    }
+
+    public void NotifyDragging(DragItem item)
+    {
+        StateHasChanged(); //
+        
+        _currentDrag = item;
+    }
+
+    public void NotifyDragEnter(DragItem draggedOver, bool rightSide = false)
+    {
+        StateHasChanged(); //
+        
+        if (lastEnter.AddMilliseconds(100) > DateTime.Now)
+            return;
+            
+        lastEnter = DateTime.Now;
+        
+        MoveItem(draggedOver, false, rightSide);
+        if ((_currentDrag != draggedOver || rightSide != _lastRight))
+        {
+            _lastOver = draggedOver;
+            _lastRight = rightSide;
+        }
+    }
+
+    public void NotifyDropOn(DragItem droppedOn, bool rightSide = false)
+    {
+        StateHasChanged(); //
+        
+        MoveItem(droppedOn, true, rightSide);
+    }
+    
+    public void NotifyStopDragging()
+    {
+        StateHasChanged(); //
+        
+        _currentDrag = null;
+        _lastOver = null;
+        _lastRight = false;
+        Console.WriteLine("Stopped dragging");
+    }
+
+    public List<DragItem> GetAnchoredTo(DragItem parent)
+    {
+        var startIndex = Items.IndexOf(parent);
+        var items = new List<DragItem>();
+        items.Add(parent);
+
+        for (int i = startIndex + 1; i < Items.Count; i++)
+        {
+            var nextItem = Items[i];
+            if (nextItem.Depth <= parent.Depth)
+                break;
+            
+            items.Add(nextItem);
+        }
+
+        return items;
+    }
+
+    public int GetEndOf(DragItem parent)
+    {
+        var startIndex = Items.IndexOf(parent);
+        var index = startIndex;
+
+        for (int i = startIndex + 1; i < Items.Count; i++)
+        {
+            var nextItem = Items[i];
+            if (nextItem.Depth <= parent.Depth)
+                break;
+
+            index = i;
+        }
+
+        return index;
+    }
+
+    public void MoveItem(DragItem target, bool drop, bool rightSide = false)
+    {
+        // If the item is being dropped on itself, do nothing
+        if (_currentDrag == target)
+            return;
+        
+        Console.WriteLine($"Moving {_currentDrag.DebugName} to {target.DebugName}");
+        Console.WriteLine("Last over: " + _lastOver?.DebugName);
+        Console.WriteLine("Right: " + rightSide);
+        
+        if (target == _lastOver && rightSide == _lastRight)
+            return;
+        
+        Console.WriteLine("Passed 1");
+        
+        // Whatever is being dragged is not a part of this
+        // wrapper object's scope
+        if (_currentDrag is null)
+            return;
+        
+        Console.WriteLine("Passed 2");
+        
+        var oldIndex = Items.IndexOf(_currentDrag);
+        
+        var anchoredTo = GetAnchoredTo(_currentDrag);
+
+        // Cannot drag into itself
+        if (anchoredTo.Contains(target))
+            return;
+
+        // Remove drag item from current position
+        Items.RemoveRange(oldIndex, anchoredTo.Count);
+        //if (targetIndex > oldIndex) targetIndex--;
+        
+        // Get position of *the end of* the target
+        var targetIndex = GetEndOf(target);
+
+        if (targetIndex + 1 >= Items.Count)
+        {
+            Items.AddRange(anchoredTo);
+        }
+        else
+        {
+            Items.InsertRange(targetIndex + 1, anchoredTo);
+        }
+
+        var depthDiff = target.Depth - _currentDrag.Depth;
+        
+        // Right side or we aren't a container and the target is means
+        // we go into the container rather than beside it
+        if (rightSide || (!_currentDrag.IsContainer && target.IsContainer))
+        {
+            foreach (var item in anchoredTo)
+            {
+                item.Depth += depthDiff + 1;
+            }
+        }
+        else
+        {
+            // Don't bother if there's no change
+            if (depthDiff != 0)
+            {
+                foreach (var item in anchoredTo)
+                {
+                    item.Depth += depthDiff;
+                }
+            }
+        }
+
+        // Recalculate zone
+        RecalculatePositions();
+        
+        StateHasChanged();
+    }
+    
+    public void RecalculatePositions()
+    {
+        var totalHeight = 0;
+        foreach (var item in Items)
+        {
+            item.SetPosition(totalHeight);
+            totalHeight += item.Height;
+        }
+        
+        Height = totalHeight;
+        
+        StateHasChanged();
+    }
 }
