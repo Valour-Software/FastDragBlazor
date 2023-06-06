@@ -1,4 +1,6 @@
-﻿<div
+﻿@typeparam TItem
+
+<div
     class="__drag-item @Class"
     style="top: @(Position)px; margin-left:  @(Depth * Wrapper.TabSize)px"
     draggable="true"
@@ -25,8 +27,14 @@
 @code {
     
     [CascadingParameter]
-    public DragWrapper Wrapper { get; set; }
+    public DragWrapper<TItem> Wrapper { get; set; }
 
+    /// <summary>
+    /// Used in event when order is changed
+    /// </summary>
+    [Parameter]
+    public TItem Data { get; set; }
+    
     /// <summary>
     /// For the animation to work, the item's height must be known
     /// </summary>
@@ -96,24 +104,30 @@
         // Console.WriteLine("Now not dragging " + GetHashCode());
     }
 
-    private void OnDrop()
+    private async Task OnDrop()
     {
-        Wrapper.NotifyDropOn(this);
+        await Wrapper.NotifyDropOn(this);
     }
     
-    private void OnDragEnter()
+    private async Task OnDragEnter()
     {
-        Wrapper.NotifyDragEnter(this);
+        await Wrapper.NotifyDragEnter(this);
     }
     
-    private void OnDropRight()
+    private async Task OnDropRight()
     {
-        Wrapper.NotifyDropOn(this, true);
+        await Wrapper.NotifyDropOn(this, true);
     }
     
-    private void OnDragEnterRight()
+    private async Task OnDragEnterRight()
     {
-        Wrapper.NotifyDragEnter(this, true);
+        await Wrapper.NotifyDragEnter(this, true);
+    }
+
+    public DragEventItem<TItem> ToData()
+    {
+        // Tasty recursion
+        return new(Data, Wrapper.GetDirectChildrenOf(this).Select(x => x.ToData()).ToList());
     }
 }
 

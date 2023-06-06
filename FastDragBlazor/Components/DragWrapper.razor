@@ -1,8 +1,13 @@
-﻿@using System.Text.Json
+﻿@typeparam TItem
 
-<p>@JsonSerializer.Serialize(Items.Select(x => x.DebugName))</p>
-<p>Dragging: @_currentDrag?.DebugName</p>
-<p>Last Over: @_lastOver?.DebugName</p>
+@using System.Text.Json
+
+@if (Debug)
+{
+    <p>@JsonSerializer.Serialize(Items.Select(x => x.DebugName))</p>
+    <p>Dragging: @_currentDrag?.DebugName</p>
+    <p>Last Over: @_lastOver?.DebugName</p>
+}
 
 @* The DragWrapper is used to wrap an entire draggable chain. DragZones within a wrapper have items shared. *@
 <div class="@Class __drag-wrapper" style="height: @Height">
@@ -26,8 +31,23 @@
     [Parameter]
     public string Class { get; set; }
 
+    /// <summary>
+    /// Distance in pixels levels are tabbed out
+    /// </summary>
     [Parameter]
     public int TabSize { get; set; } = 20;
+    
+    /// <summary>
+    /// Event called when the order of items changes
+    /// </summary>
+    [Parameter]
+    public Func<List<DragEventItem<TItem>>, Task> OnChangeAsync { get; set; }
+    
+    /// <summary>
+    /// Shows helpful debugging information
+    /// </summary>
+    [Parameter]
+    public bool Debug { get; set; } = false;
     
     /// <summary>
     /// Used to give wrapper proper height
@@ -37,12 +57,12 @@
     /// <summary>
     /// The item currently being dragged
     /// </summary>
-    private DragItem _currentDrag;
+    private DragItem<TItem> _currentDrag;
 
     /// <summary>
     /// Last item hovered over
     /// </summary>
-    private DragItem _lastOver;
+    private DragItem<TItem> _lastOver;
 
     /// <summary>
     /// If the last hover was on the right
@@ -52,11 +72,11 @@
     /// <summary>
     /// The items within this DragWrapper.
     /// </summary>
-    public List<DragItem> Items { get; set; } = new();
+    public List<DragItem<TItem>> Items { get; set; } = new();
 
     private DateTime lastEnter;
     
-    public void RegisterItem(DragItem item)
+    public void RegisterItem(DragItem<TItem> item)
     {
         // Add to list
         Items.Add(item);
@@ -67,26 +87,30 @@
         // Add to total height
         Height += item.Height;
         
-        StateHasChanged();
+        if (Debug)
+            StateHasChanged();
     }
 
-    public void NotifyDragging(DragItem item)
+    public void NotifyDragging(DragItem<TItem> item)
     {
-        StateHasChanged(); //
+        if (Debug)
+            StateHasChanged();
         
         _currentDrag = item;
     }
 
-    public void NotifyDragEnter(DragItem draggedOver, bool rightSide = false)
+    public async Task NotifyDragEnter(DragItem<TItem> draggedOver, bool rightSide = false)
     {
-        StateHasChanged(); //
+        if (Debug)
+            StateHasChanged();
         
         if (lastEnter.AddMilliseconds(100) > DateTime.Now)
             return;
             
         lastEnter = DateTime.Now;
         
-        MoveItem(draggedOver, false, rightSide);
+        await MoveItem(draggedOver, false, rightSide);
+        
         if ((_currentDrag != draggedOver || rightSide != _lastRight))
         {
             _lastOver = draggedOver;
@@ -94,27 +118,31 @@
         }
     }
 
-    public void NotifyDropOn(DragItem droppedOn, bool rightSide = false)
+    public async Task NotifyDropOn(DragItem<TItem> droppedOn, bool rightSide = false)
     {
-        StateHasChanged(); //
+        if (Debug)
+            StateHasChanged();
         
-        MoveItem(droppedOn, true, rightSide);
+        await MoveItem(droppedOn, true, rightSide);
     }
     
     public void NotifyStopDragging()
     {
-        StateHasChanged(); //
+        if (Debug)
+            StateHasChanged();
         
         _currentDrag = null;
         _lastOver = null;
         _lastRight = false;
-        Console.WriteLine("Stopped dragging");
+        
+        if (Debug)
+            Console.WriteLine("Stopped dragging");
     }
 
-    public List<DragItem> GetAnchoredTo(DragItem parent)
+    private List<DragItem<TItem>> GetAnchoredTo(DragItem<TItem> parent)
     {
         var startIndex = Items.IndexOf(parent);
-        var items = new List<DragItem>();
+        var items = new List<DragItem<TItem>>();
         items.Add(parent);
 
         for (int i = startIndex + 1; i < Items.Count; i++)
@@ -128,8 +156,27 @@
 
         return items;
     }
+    
+    public List<DragItem<TItem>> GetDirectChildrenOf(DragItem<TItem> parent)
+    {
+        var startIndex = Items.IndexOf(parent);
+        var items = new List<DragItem<TItem>>();
 
-    public int GetEndOf(DragItem parent)
+        for (int i = startIndex + 1; i < Items.Count; i++)
+        {
+            var nextItem = Items[i];
+            if (nextItem.Depth <= parent.Depth)
+                break;
+            
+            // Only a direct child if the depth is one more than the parent
+            if (nextItem.Depth == parent.Depth + 1)
+                items.Add(nextItem);
+        }
+
+        return items;
+    }
+
+    private int GetEndOf(DragItem<TItem> parent)
     {
         var startIndex = Items.IndexOf(parent);
         var index = startIndex;
@@ -146,28 +193,27 @@
         return index;
     }
 
-    public void MoveItem(DragItem target, bool drop, bool rightSide = false)
+    public async Task MoveItem(DragItem<TItem> target, bool drop, bool rightSide = false)
     {
         // If the item is being dropped on itself, do nothing
         if (_currentDrag == target)
             return;
         
-        Console.WriteLine($"Moving {_currentDrag.DebugName} to {target.DebugName}");
-        Console.WriteLine("Last over: " + _lastOver?.DebugName);
-        Console.WriteLine("Right: " + rightSide);
-        
+        if (Debug)
+        {
+            Console.WriteLine($"Moving {_currentDrag.DebugName} to {target.DebugName}");
+            Console.WriteLine("Last over: " + _lastOver?.DebugName);
+            Console.WriteLine("Right: " + rightSide);
+        }
+
         if (target == _lastOver && rightSide == _lastRight)
             return;
-        
-        Console.WriteLine("Passed 1");
-        
+
         // Whatever is being dragged is not a part of this
         // wrapper object's scope
         if (_currentDrag is null)
             return;
-        
-        Console.WriteLine("Passed 2");
-        
+
         var oldIndex = Items.IndexOf(_currentDrag);
         
         var anchoredTo = GetAnchoredTo(_currentDrag);
@@ -217,8 +263,19 @@
 
         // Recalculate zone
         RecalculatePositions();
+
+        if (OnChangeAsync is null)
+            return;
         
-        StateHasChanged();
+        // Fire off change event with data
+        List<DragEventItem<TItem>> data = new();
+        var topLevel = Items.Where(x => x.Depth == 0).ToList();
+        foreach (var item in topLevel)
+        {
+            data.Add(item.ToData());
+        }
+        
+        await OnChangeAsync.Invoke(data);
     }
     
     public void RecalculatePositions()

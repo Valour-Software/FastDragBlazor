@@ -1,4 +1,5 @@
 ﻿@using FastDragBlazor.Components
+@using System.Text.Json
 @page "/"
 
 <PageTitle>Index</PageTitle>
@@ -11,26 +12,33 @@ Welcome to your new app.
 
 <br/>
 
-<DragWrapper>
-    <DragItem Class="drag-item" Height="40" DebugName="Banana Box" IsContainer="true">
+<DragWrapper TItem="string" OnChangeAsync="@OnChangeAsync">
+    <DragItem TItem="string" Data='"CAT1"' Class="drag-item" Height="40" IsContainer="true">
         <p>Category</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Banana Box" IsContainer="true">
+    <DragItem TItem="string" Data='"CAT2"' Class="drag-item" Height="40" IsContainer="true">
         <p>Category 2</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Pineapple">
+    <DragItem TItem="string" Data='"CHAN1"' Class="drag-item" Height="40">
         <p>Channel 1</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Blueberry">
+    <DragItem TItem="string" Data='"CHAN2"' Class="drag-item" Height="40">
         <p>Channel 2</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Cherry">
+    <DragItem TItem="string" Data='"CHAN3"' Class="drag-item" Height="40">
         <p>Channel 3</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Egg">
+    <DragItem TItem="string" Data='"CHAN4"' Class="drag-item" Height="40">
         <p>Channel 4</p>
     </DragItem>
-    <DragItem Class="drag-item" Height="40" DebugName="Grape">
+    <DragItem TItem="string" Data='"CHAN5"' Class="drag-item" Height="40">
         <p>Channel 5</p>
     </DragItem>
 </DragWrapper>
+
+@code {
+    private async Task OnChangeAsync(List<DragEventItem<string>> data)
+    {
+        Console.WriteLine(JsonSerializer.Serialize(data));
+    }
+}
