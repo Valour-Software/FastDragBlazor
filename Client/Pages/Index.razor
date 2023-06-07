@@ -37,7 +37,7 @@ Welcome to your new app.
 </DragWrapper>
 
 @code {
-    private async Task OnChangeAsync(List<DragEventItem<string>> data)
+    private async Task OnChangeAsync(DragEventData<string> data)
     {
         Console.WriteLine(JsonSerializer.Serialize(data));
     }

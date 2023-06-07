@@ -41,7 +41,7 @@
     /// Event called when the order of items changes
     /// </summary>
     [Parameter]
-    public Func<List<DragEventItem<TItem>>, Task> OnChangeAsync { get; set; }
+    public Func<DragEventData<TItem>, Task> OnChangeAsync { get; set; }
     
     /// <summary>
     /// Shows helpful debugging information
@@ -267,17 +267,65 @@
         if (OnChangeAsync is null)
             return;
         
-        // Fire off change event with data
-        List<DragEventItem<TItem>> data = new();
+        // Fire off change event with data for the container that has changed
+        
+        DragEventData<TItem> eventData = new()
+        {
+            MovedItem = _currentDrag.Data,
+        };
+        
+        // Get the container that holds the target
+        // We need to work backwards to find it
+        var endIndex = Items.IndexOf(target);
+        for (int i = endIndex; i >= 0; i--)
+        {
+            var item = Items[i];
+            if (item.IsContainer && item.Depth == _currentDrag.Depth - 1)
+            {
+                eventData.TargetContainer = item.Data;
+                break;
+            }
+        }
+        
+        // Find relative index of the item within the container
+        // The relative index of the child within the parent
+        // Ex:
+        // Container
+        //  - Child [0]
+        //    - SubChild
+        //  - Child [1]
+        //  - Child [2]
+        var selfEndIndex = Items.IndexOf(_currentDrag);
+        var relIndex = 0;
+        for (int i = selfEndIndex - 1; i >= 0; i--)
+        {
+            if (Items[i].Depth == _currentDrag.Depth)
+            {
+                relIndex++; // If it's an item at the same depth, it's a sibling before us.
+                            // This allows us to find the relative index in the same scan.
+            }
+        }
+
+        eventData.Index = relIndex;
+
+        await OnChangeAsync.Invoke(eventData);
+    }
+
+    /// <summary>
+    /// Returns the entire state of the DragWrapper, including child-parent relationships.
+    /// </summary>
+    public List<DragChangeData<TItem>> GetFullState()
+    {
+        List<DragChangeData<TItem>> data = new();
         var topLevel = Items.Where(x => x.Depth == 0).ToList();
         foreach (var item in topLevel)
         {
             data.Add(item.ToData());
         }
-        
-        await OnChangeAsync.Invoke(data);
-    }
-    
+
+        return data;
+    } 
+
     public void RecalculatePositions()
     {
         var totalHeight = 0;

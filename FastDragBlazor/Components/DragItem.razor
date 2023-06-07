@@ -124,7 +124,7 @@
         await Wrapper.NotifyDragEnter(this, true);
     }
 
-    public DragEventItem<TItem> ToData()
+    public DragChangeData<TItem> ToData()
     {
         // Tasty recursion
         return new(Data, Wrapper.GetDirectChildrenOf(this).Select(x => x.ToData()).ToList());
