@@ -2,7 +2,7 @@
 
 <div
     class="__drag-item @Class"
-    style="top: @(Position)px; margin-left:  @(Depth * Wrapper.TabSize)px"
+    style="top: @(Position)px; @(Wrapper.UsePaddingTabs ? "padding-left:" : "margin-left:")  @(Depth * Wrapper.TabSize)px"
     draggable="true"
     ondragover="event.preventDefault();"
     @ondragstart="OnDragStart"

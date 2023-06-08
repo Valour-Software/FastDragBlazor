@@ -10,7 +10,7 @@
 }
 
 @* The DragWrapper is used to wrap an entire draggable chain. DragZones within a wrapper have items shared. *@
-<div class="@Class __drag-wrapper" style="height: @Height">
+<div class="@Class __drag-wrapper" style="height: @(Height)px">
     <CascadingValue Value="this" IsFixed="true">
         @ChildContent
     </CascadingValue>
@@ -36,6 +36,12 @@
     /// </summary>
     [Parameter]
     public int TabSize { get; set; } = 20;
+    
+    /// <summary>
+    /// If true, tabs will be created using padding rather than margin
+    /// </summary>
+    [Parameter]
+    public bool UsePaddingTabs { get; set; }
     
     /// <summary>
     /// Event called when the order of items changes
