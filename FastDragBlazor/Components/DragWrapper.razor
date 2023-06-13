@@ -330,15 +330,57 @@
         }
 
         return data;
-    } 
+    }
+
+    public void ToggleExpanded(DragItem<TItem> item)
+    {
+        item.Expanded = !item.Expanded;
+        CalculateVisibility();
+        RecalculatePositions();
+    }
+
+
+    public void CalculateVisibility()
+    {
+        // Layering is used to determine relationships on the fly
+        Dictionary<int, DragItem<TItem>> layers = new();
+
+        foreach (var item in Items)
+        {
+            layers[item.Depth] = item; // Set last of layer to new item
+
+            bool visible = true;
+            int parentLayer = item.Depth - 1;
+            for (int i = parentLayer; i >= 0; i--)
+            {
+                layers.TryGetValue(i, out var parent);
+
+                if (parent is null)
+                    break;
+
+                if (!parent.Expanded)
+                {
+                    visible = false;
+                    break;
+                }
+            }
+            
+            item.Visible = visible;
+        }
+    }
 
     public void RecalculatePositions()
     {
         var totalHeight = 0;
         foreach (var item in Items)
         {
-            item.SetPosition(totalHeight);
-            totalHeight += item.Height;
+            
+
+            if (item.Visible)
+            {
+                item.SetPosition(totalHeight);
+                totalHeight += item.Height;
+            }
         }
         
         Height = totalHeight;

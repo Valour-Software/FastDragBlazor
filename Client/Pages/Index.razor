@@ -12,8 +12,8 @@ Welcome to your new app.
 
 <br/>
 
-<DragWrapper TItem="string" OnChangeAsync="@OnChangeAsync" UsePaddingTabs="false">
-    <DragItem TItem="string" Data='"CAT1"' Class="drag-item" Height="40" IsContainer="true">
+<DragWrapper @ref="_wrapper" TItem="string" OnChangeAsync="@OnChangeAsync" UsePaddingTabs="false">
+    <DragItem @ref="_cat" TItem="string" Data='"CAT1"' Class="drag-item" Height="40" IsContainer="true">
         <p>Category</p>
     </DragItem>
     <DragItem TItem="string" Data='"CAT2"' Class="drag-item" Height="40" IsContainer="true">
@@ -36,7 +36,19 @@ Welcome to your new app.
     </DragItem>
 </DragWrapper>
 
+<button @onclick="OnClickHide">Hide Category</button>
+
 @code {
+
+    private DragItem<string> _cat;
+    private DragWrapper<string> _wrapper;
+
+    private void OnClickHide()
+    {
+        _wrapper.ToggleExpanded(_cat);
+        StateHasChanged();
+    }
+    
     private async Task OnChangeAsync(DragEventData<string> data)
     {
         Console.WriteLine(JsonSerializer.Serialize(data));
