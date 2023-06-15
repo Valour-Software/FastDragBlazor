@@ -97,6 +97,12 @@
             StateHasChanged();
     }
 
+    public void RemoveItem(TItem item)
+    {
+        Items.RemoveAll(x => x.Data.Equals(item));
+        RecalculatePositions();
+    }
+
     public void NotifyDragging(DragItem<TItem> item)
     {
         if (Debug)
@@ -327,14 +333,15 @@
         foreach (var item in topLevel)
         {
             data.Add(item.ToData());
-        }
+        }   
 
         return data;
     }
 
-    public void ToggleExpanded(DragItem<TItem> item)
+    public void ToggleExpanded(TItem item)
     {
-        item.Expanded = !item.Expanded;
+        var target = Items.FirstOrDefault(x => x.Data.Equals(item));
+        target.Expanded = !target.Expanded;
         CalculateVisibility();
         RecalculatePositions();
     }
@@ -374,8 +381,6 @@
         var totalHeight = 0;
         foreach (var item in Items)
         {
-            
-
             if (item.Visible)
             {
                 item.SetPosition(totalHeight);

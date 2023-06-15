@@ -13,40 +13,49 @@ Welcome to your new app.
 <br/>
 
 <DragWrapper @ref="_wrapper" TItem="string" OnChangeAsync="@OnChangeAsync" UsePaddingTabs="false">
-    <DragItem @ref="_cat" TItem="string" Data='"CAT1"' Class="drag-item" Height="40" IsContainer="true">
-        <p>Category</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CAT2"' Class="drag-item" Height="40" IsContainer="true">
-        <p>Category 2</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CHAN1"' Class="drag-item" Height="40">
-        <p>Channel 1</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CHAN2"' Class="drag-item" Height="40">
-        <p>Channel 2</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CHAN3"' Class="drag-item" Height="40">
-        <p>Channel 3</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CHAN4"' Class="drag-item" Height="40">
-        <p>Channel 4</p>
-    </DragItem>
-    <DragItem TItem="string" Data='"CHAN5"' Class="drag-item" Height="40">
-        <p>Channel 5</p>
-    </DragItem>
+    @foreach (var item in _items)
+    {
+        <DragItem @key="@item.Name" TItem="string" Data="@item.Name" Class="drag-item" Height="40" IsContainer="@item.IsCategory">
+            <p style="background-color:@item.Color; margin: 0; padding: 8px">@item.Name</p>
+        </DragItem>
+    }
 </DragWrapper>
 
 <button @onclick="OnClickHide">Hide Category</button>
+<button @onclick="OnClickRemove">Remove Category</button>
 
 @code {
 
-    private DragItem<string> _cat;
+    public class DragItemData
+    {
+        public string Name { get; set; }
+        public bool IsCategory { get; set; }
+        public string Color { get; set; }
+    }
+    
+    List<DragItemData> _items = new List<DragItemData>()
+    {
+        new DragItemData() { Name = "CAT1", IsCategory = true, Color = "lightblue" },
+        new DragItemData() { Name = "CAT2", IsCategory = true, Color = "lightgreen" },
+        new DragItemData() { Name = "CHAN1", IsCategory = false, Color = "lightyellow" },
+        new DragItemData() { Name = "CHAN2", IsCategory = false, Color = "lightgreen" },
+        new DragItemData() { Name = "CHAN3", IsCategory = false, Color = "lightseagreen" },
+        new DragItemData() { Name = "CHAN4", IsCategory = false, Color = "lightcoral" },
+        new DragItemData() { Name = "CHAN5", IsCategory = false, Color = "lightgrey" },
+    };
+    
     private DragWrapper<string> _wrapper;
 
     private void OnClickHide()
     {
-        _wrapper.ToggleExpanded(_cat);
+        _wrapper.ToggleExpanded(_items[0].Name);
         StateHasChanged();
+    }
+    
+    private void OnClickRemove()
+    {
+        //_items.RemoveAt(0);
+        _wrapper.RemoveItem(_wrapper.Items[0].Data);
     }
     
     private async Task OnChangeAsync(DragEventData<string> data)

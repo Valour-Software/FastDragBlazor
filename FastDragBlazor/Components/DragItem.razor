@@ -133,5 +133,10 @@
         // Tasty recursion
         return new(Data, Wrapper.GetDirectChildrenOf(this).Select(x => x.ToData()).ToList());
     }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
 }
 
